@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Demo E-commerce App</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <img src="assets/logo.png" alt="Demo Logo" class="logo"/>
+    <h1>Demo E-commerce App (Apache)</h1>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Instance info</h2>
+      <p><strong>Region:</strong> <span id="region">loading…</span></p>
+      <p><strong>Instance ID:</strong> <span id="instance-id">loading…</span></p>
+      <p><strong>Server time:</strong> <span id="servertime"></span></p>
+    </section>
+
+    <section class="card">
+      <h2>About this demo</h2>
+      <p>This is a static HTML demo page served by Apache for practicing AWS Console deployment (EC2, ALB, Route 53).</p>
+      <p>Health check path: <code>/</code> (returns HTTP 200).</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <small>Built for AWS Console practice — Demo only.</small>
+  </footer>
+
+  <script>
+    async function fetchMeta(path) {
+      try {
+        const res = await fetch(path, { cache: "no-store" });
+        if (!res.ok) return "unavailable";
+        return await res.text();
+      } catch (e) {
+        return "unavailable";
+      }
+    }
+
+    async function setMeta() {
+      // EC2 metadata URL is only accessible from within an EC2 instance.
+      const base = "http://169.254.169.254/latest/meta-data";
+      const instanceId = await fetchMeta(base + "/instance-id");
+      // For IMDSv2 tokens would be necessary; this simple script works only if metadata access is allowed.
+      const region = await fetchMeta("http://169.254.169.254/latest/dynamic/instance-identity/document")
+        .then(t => {
+          try { return JSON.parse(t).region || "unavailable"; } catch { return "unavailable"; }
+        });
+      document.getElementById("instance-id").textContent = instanceId;
+      document.getElementById("region").textContent = region;
+      document.getElementById("servertime").textContent = new Date().toLocaleString();
+    }
+
+    setMeta();
+  </script>
+</body>
+</html>
